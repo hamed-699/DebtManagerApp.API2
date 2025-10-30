@@ -27,13 +27,21 @@ namespace DebtManagerApp.API.Controllers
 			_config = config;
 		}
 
+		// !!! --- تم تعديل دالة التسجيل بالكامل --- !!!
 		[HttpPost("register")]
 		public async Task<IActionResult> Register(UserRegisterDto userRegisterDto)
 		{
 			// التحقق مما إذا كان اسم المستخدم موجوداً بالفعل
 			if (await _context.Users.AnyAsync(u => u.Username.ToLower() == userRegisterDto.Username.ToLower()))
 			{
-				return BadRequest("Username already exists.");
+				// --- (تعديل 1) إرجاع رسالة خطأ واضحة ---
+				return BadRequest(new { message = "اسم المستخدم هذا موجود مسبقاً." });
+			}
+
+			// التحقق من البريد الإلكتروني (اختياري لكن موصى به)
+			if (await _context.Users.AnyAsync(u => u.Email.ToLower() == userRegisterDto.Email.ToLower()))
+			{
+				return BadRequest(new { message = "هذا البريد الإلكتروني مسجل مسبقاً." });
 			}
 
 			// تشفير كلمة المرور باستخدام BCrypt
@@ -60,13 +68,29 @@ namespace DebtManagerApp.API.Controllers
 			_context.Users.Add(newUser);
 			await _context.SaveChangesAsync();
 
-			return Ok("User registered successfully.");
-		}
+			// --- (تعديل 2) إرجاع الكائن الصحيح (Token + User) ---
+			// جلب المستخدم مع المؤسسة (التي نحتاجها في العميل)
+			var userForReturn = await _context.Users
+				.Include(u => u.Organization) // <-- تحميل المؤسسة
+				.FirstOrDefaultAsync(u => u.Id == newUser.Id);
 
+			// إنشاء "بطاقة الهوية الرقمية" (JWT Token)
+			var token = GenerateJwtToken(newUser);
+
+			// إرجاع الكائن الذي يتوقعه العميل
+			return Ok(new { token, user = userForReturn });
+		}
+		// !!! --- نهاية تعديل دالة التسجيل --- !!!
+
+
+		// !!! --- تم تعديل دالة تسجيل الدخول --- !!!
 		[HttpPost("login")]
 		public async Task<IActionResult> Login(UserLoginDto userLoginDto)
 		{
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == userLoginDto.Username.ToLower());
+			// جلب المستخدم مع المؤسسة
+			var user = await _context.Users
+				.Include(u => u.Organization) // <-- تحميل المؤسسة
+				.FirstOrDefaultAsync(u => u.Username.ToLower() == userLoginDto.Username.ToLower());
 
 			// التحقق من وجود المستخدم وصحة كلمة المرور
 			if (user == null || !BCrypt.Net.BCrypt.Verify(userLoginDto.Password, user.PasswordHash))
@@ -77,8 +101,10 @@ namespace DebtManagerApp.API.Controllers
 			// إنشاء "بطاقة الهوية الرقمية" (JWT Token)
 			var token = GenerateJwtToken(user);
 
-			return Ok(new { token });
+			// --- (تعديل) إرجاع الكائن الكامل (Token + User) ---
+			return Ok(new { token, user });
 		}
+		// !!! --- نهاية تعديل دالة تسجيل الدخول --- !!!
 
 		// --- بداية الإضافة: "صندوق" بيانات لنقطة النهاية الجديدة ---
 		public class CloudPasswordResetDto
