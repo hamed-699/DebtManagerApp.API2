@@ -1,0 +1,52 @@
+﻿{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      // --- بداية التعديل (منفذ جديد) ---
+      "applicationUrl": "http://127.0.0.1:5201",
+      // --- نهاية التعديل ---
+      "sslPort": 44360
+    }
+  },
+  "profiles": {
+    "http": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      // --- بداية التعديل (منفذ جديد) ---
+      "applicationUrl": "http://127.0.0.1:5201",
+      // --- نهاية التعديل ---
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "GOOGLE_APPLICATION_CREDENTIALS": "mythical-way-467121-j6-2db788d15bc9.json"
+      }
+    },
+    "httpss": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      // --- بداية التعديل (منفذ جديد) ---
+      // أبقينا https على حاله، ولكن http تم تغييره
+      "applicationUrl": "https://127.0.0.1:7184;http://127.0.0.1:5201",
+      // --- نهاية التعديل ---
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "GOOGLE_APPLICATION_CREDENTIALS": "mythical-way-467121-j6-2db788d15bc9.json"
+      }
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "GOOGLE_APPLICATION_CREDENTIALS": "mythical-way-467121-j6-2db788d15bc9.json"
+      }
+    }
+  }
+}
+

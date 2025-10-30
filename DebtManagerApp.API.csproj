@@ -1,0 +1,91 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>dotnet-DebtManagerApp.API-639556A3-31A9-4C0B-97F7-1C34B80313E8</UserSecretsId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+		<PackageReference Include="Google.Apis.Auth" Version="1.72.0" />
+
+		<!-- تم الإبقاء على الحزمة القديمة (V1) لأنها مُثبتة لديك بالفعل -->
+		<PackageReference Include="Google.Cloud.AIPlatform.V1" Version="3.53.0" />
+		<!-- تم حذف أي إشارة للحزمة الجديدة (GenAI.V1Beta) -->
+
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.14" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+	</ItemGroup>
+
+	<!-- الحفاظ على كل الملفات المشتركة -->
+	<ItemGroup>
+		<Compile Include="..\DebtManagerApp2\AnalyticsCustomerStatus.cs">
+			<Link>AnalyticsCustomerStatus.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\Category.cs">
+			<Link>Data\Category.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\CurrencyType.cs">
+			<Link>Data\CurrencyType.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\Customer.cs">
+			<Link>Data\Customer.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\DatabaseContext.cs" Link="Data\DatabaseContext.cs" />
+		<Compile Include="..\DebtManagerApp2\Data\InventoryItemType.cs">
+			<Link>Data\InventoryItemType.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\Organization.cs">
+			<Link>Data\Organization.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\OrganizationSettings.cs" Link="Data\OrganizationSettings.cs" />
+		<Compile Include="..\DebtManagerApp2\Data\Product.cs">
+			<Link>Data\Product.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\Sale.cs">
+			<Link>Data\Sale.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\SaleItem.cs">
+			<Link>Data\SaleItem.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\ShoppingListItem.cs">
+			<Link>Data\ShoppingListItem.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\SyncStatus.cs">
+			<Link>Data\SyncStatus.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\Transaction.cs">
+			<Link>Data\Transaction.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\TransactionType.cs">
+			<Link>Data\TransactionType.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\User.cs">
+			<Link>Data\User.cs</Link>
+		</Compile>
+		<Compile Include="..\DebtManagerApp2\Data\UserRole.cs">
+			<Link>Data\UserRole.cs</Link>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="Data\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Update="mythical-way-467121-j6-2db788d15bc9.json">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+
+</Project>
+

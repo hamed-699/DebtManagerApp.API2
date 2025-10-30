@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+This file is used by the publish/package process of your Web project. You can customize the behavior of this process
+by editing this MSBuild file. In order to learn more about this please visit https://go.microsoft.com/fwlink/?LinkID=208121. 
+-->
+<Project>
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <History>True|2025-10-27T20:05:08.4968948Z||;True|2025-10-27T22:01:00.3118120+03:00||;True|2025-10-27T01:42:54.3843523+03:00||;True|2025-10-27T01:32:24.9611658+03:00||;True|2025-10-27T00:16:22.4774626+03:00||;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+  <ItemGroup>
+    <AzureDBConnectionStrings Include="REDACTED" />
+    <AzureDBConnectionStrings Include="Server=tcp:doyoniapp-server-699.database.windows.net,1433;Initial Catalog=DoyoniApp_MultiTenant_DB;Persist Security Info=False;User ID=CloudSAd8c9959f;Password=07800375-Aa;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30" />
+  </ItemGroup>
+</Project>
