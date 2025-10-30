@@ -11,6 +11,10 @@ using Microsoft.OpenApi.Models; // لـ OpenApiInfo
 								// using Google.Apis.Auth.OAuth2; // (تمت الإزالة)
 								// using Google.Cloud.Language.V1; // (تمت الإزالة)
 
+// !!! --- هذا هو السطر الجديد الذي أضفته --- !!!
+using System.Text.Json.Serialization;
+// !!! --- نهاية السطر الجديد --- !!!
+
 var builder = WebApplication.CreateBuilder(args);
 
 // --- إعدادات Supabase (PostgreSQL) ---
@@ -60,7 +64,15 @@ builder.Services.AddTransient<EmailService>(); // (هذا صحيح)
 
 
 // إضافة الخدمات الأخرى
-builder.Services.AddControllers();
+// !!! --- هذا هو التعديل الثاني لحل خطأ 500 --- !!!
+builder.Services.AddControllers()
+	.AddJsonOptions(options =>
+	{
+		// هذا السطر يخبر الخادم بتجاهل الحلقات المفرغة
+		options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+	});
+// !!! --- نهاية التعديل --- !!!
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
