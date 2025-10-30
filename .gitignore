@@ -1,0 +1,16 @@
+--- هذا ملف يخبر Git بتجاهل ملفات معينة ---
+
+1. تجاهل الأسرار (أهم شيء)
+
+appsettings.json
+appsettings.Development.json
+mythical-way-467121-j6-2db788d15bc9.json
+
+2. تجاهل مجلدات البناء الخاصة بـ .NET
+
+bin/
+obj/
+
+3. تجاهل ملفات المستخدم المؤقتة
+
+*.user
