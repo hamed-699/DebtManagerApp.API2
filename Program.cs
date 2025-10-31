@@ -9,25 +9,29 @@ using DebtManagerApp.Data;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
+using Npgsql; // 👈 مهم جداً
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- إعدادات Supabase (PostgreSQL) ---
-// !!! --- هذا هو الإصلاح النهائي بناءً على اكتشافك --- !!!
-// 1. الخادم سيبحث عن المفتاح الذي استخدمناه يدوياً
 var connectionString = builder.Configuration["SUPABASE_CONNECTION_STRING"];
 
-// 2. إذا لم يجده (كان فارغاً)، سيبحث عن المفتاح الافتراضي الذي تستخدمه "رندر"
 if (string.IsNullOrEmpty(connectionString))
 {
 	connectionString = builder.Configuration["DATABASE_URL"];
 }
-// !!! --- نهاية الإصلاح --- !!!
 
+// ✅ هنا نتحقق إن كانت الصيغة تبدأ بـ postgres:// ثم نحولها
+if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("postgres://"))
+{
+	connectionString = ConvertSupabaseUrlToNpgsql(connectionString);
+}
+
+// --- تهيئة EF Core ---
 builder.Services.AddDbContext<DatabaseContext>(options =>
 	options.UseNpgsql(connectionString));
 
-// --- إعدادات JWT (JSON Web Token) ---
+// --- إعدادات JWT ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]
 	?? throw new InvalidOperationException("JWT Key is missing in configuration."));
@@ -54,11 +58,11 @@ builder.Services.AddAuthentication(options =>
 	};
 });
 
-// --- إعدادات خدمة البريد الإلكتروني (SmtpSettings) ---
+// --- إعدادات البريد الإلكتروني ---
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<EmailService>();
 
-// إضافة الخدمات الأخرى
+// --- الخدمات ---
 builder.Services.AddControllers()
 	.AddJsonOptions(options =>
 	{
@@ -96,8 +100,7 @@ builder.Services.AddSwaggerGen(c =>
 	});
 });
 
-
-// إضافة سياسة CORS (مهم جداً)
+// --- سياسة CORS ---
 builder.Services.AddCors(options =>
 {
 	options.AddPolicy("AllowAll", policy =>
@@ -110,7 +113,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// --- الكود الخاص بإنشاء الجداول (سليم ومطلوب) ---
+// --- إنشاء الجداول ---
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
@@ -125,27 +128,36 @@ using (var scope = app.Services.CreateScope())
 		logger.LogError(ex, "An error occurred while creating the database.");
 	}
 }
-// --- نهاية كود إنشاء الجداول ---
 
-
-// تفعيل CORS
+// --- تفعيل الميدل وير ---
 app.UseCors("AllowAll");
-
 app.UseSwagger();
 app.UseSwaggerUI();
-
-// تطبيق التوجيه (Routing)
 app.UseRouting();
-
-// تطبيق المصادقة (Authentication)
 app.UseAuthentication();
-
-// تطبيق الصلاحيات (Authorization)
 app.UseAuthorization();
-
 app.MapControllers();
 
-// --- الكود المصحح لتشغيل المنفذ (PORT) ---
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://*:{port}");
 
+// 🔄 دالة التحويل
+static string ConvertSupabaseUrlToNpgsql(string databaseUrl)
+{
+	// شكل الرابط: postgres://user:password@host:5432/dbname
+	var uri = new Uri(databaseUrl);
+	var userInfo = uri.UserInfo.Split(':');
+
+	var builder = new NpgsqlConnectionStringBuilder
+	{
+		Host = uri.Host,
+		Port = uri.Port,
+		Username = userInfo[0],
+		Password = userInfo.Length > 1 ? userInfo[1] : "",
+		Database = uri.AbsolutePath.Trim('/'),
+		SslMode = SslMode.Require,
+		TrustServerCertificate = true
+	};
+
+	return builder.ToString();
+}
