@@ -14,7 +14,6 @@ using Npgsql; // 👈 مهم جداً
 var builder = WebApplication.CreateBuilder(args);
 
 // --- إعدادات Supabase (PostgreSQL) ---
-// --- أبسط طريقة: اقرأ المفتاح واستخدمه كما هو ---
 var connectionString = builder.Configuration["SUPABASE_CONNECTION_STRING"];
 
 if (string.IsNullOrEmpty(connectionString))
@@ -24,16 +23,16 @@ if (string.IsNullOrEmpty(connectionString))
 }
 else
 {
-	// نطبع أول 10 حروف للتأكد أننا نقرأه (بدون طباعة كلمة السر)
 	Console.WriteLine($"[DEBUG] Connection string found, starting with: {connectionString.Substring(0, Math.Min(connectionString.Length, 10))}...");
 }
 
-// --- تهيئة EF Core ---
-// (سيتم استخدام النص "كما هو" مباشرة)
-// --- (الرجوع إلى الطريقة البسيطة) ---
+// --- تهيئة EF Core (باستخدام "العامل الذكي") ---
 builder.Services.AddDbContext<DatabaseContext>(options =>
-	options.UseNpgsql(connectionString)
-); // <-- قمنا بإزالة السطر الخاص بـ Migrations
+	options.UseNpgsql(connectionString,
+		// --- (هذا هو السطر الجديد الذي يخبره أين يجد "تعليمات البناء") ---
+		npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName)
+	)
+);
 
 // --- إعدادات JWT ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -55,8 +54,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-	// --- (تم تصحيح الخطأ المطبعي هنا) ---
-	options.RequireHttpsMetadata = false; // <-- كانت HttspMetadata
+	options.RequireHttpsMetadata = false;
 	options.SaveToken = true;
 	options.TokenValidationParameters = new TokenValidationParameters
 	{
@@ -126,7 +124,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// --- إنشاء الجداول (باستخدام الطريقة "الكسولة" الأصلية) ---
+// --- تطبيق "تعليمات البناء" (Migrations) ---
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
@@ -135,16 +133,16 @@ using (var scope = app.Services.CreateScope())
 		var dbContext = services.GetRequiredService<DatabaseContext>();
 
 		// ------------------ التغيير الوحيد هنا ------------------
-		dbContext.Database.EnsureCreated(); // <-- إرجاع الأمر "الكسول"
-											// dbContext.Database.Migrate(); // <-- حذف الأمر "الذكي" الخاطئ
-											// -----------------------------------------------------------
+		// dbContext.Database.EnsureCreated(); // <-- حذف الأمر "الكسول"
+		dbContext.Database.Migrate(); // <-- استخدام الأمر "الذكي"
+									  // -----------------------------------------------------------
 
-		Console.WriteLine("[SUCCESS] Database connection verified and tables ensured.");
+		Console.WriteLine("[SUCCESS] Database connection verified and tables migrated.");
 	}
 	catch (Exception ex)
 	{
 		var logger = services.GetRequiredService<ILogger<Program>>();
-		logger.LogError(ex, "An error occurred while ensuring the database was created.");
+		logger.LogError(ex, "An error occurred while migrating the database.");
 		// سنسمح للتطبيق بالاستمرار لكي نرى الأخطاء الأخرى إذا وجدت
 	}
 }
@@ -160,6 +158,4 @@ app.MapControllers();
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://*:{port}");
-
-// 🔄 دالة التحويل (تم حذفها لأننا سنستخدم النص البسيط)
 
