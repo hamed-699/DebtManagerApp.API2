@@ -24,44 +24,27 @@ if (string.IsNullOrEmpty(connectionString))
 // ✅ هنا نتحقق إن كانت الصيغة تبدأ بـ postgres:// ثم نحولها
 if (!string.IsNullOrEmpty(connectionString))
 {
-	// طباعة السجل (اختياري لكن مفيد)
-	Console.WriteLine($"[DEBUG] Original connection string found.");
+	Console.WriteLine($"[DEBUG] Original connection string: {connectionString}");
 	if (connectionString.StartsWith("postgres://"))
 	{
 		connectionString = ConvertSupabaseUrlToNpgsql(connectionString);
-		Console.WriteLine($"[DEBUG] Connection string converted to Npgsql format.");
+		Console.WriteLine($"[DEBUG] Converted connection string: {connectionString}");
 	}
 }
 else
 {
-	Console.WriteLine("[ERROR] No connection string found! (SUPABASE_CONNECTION_STRING or DATABASE_URL)");
+	Console.WriteLine("[ERROR] No connection string found!");
 }
+Console.WriteLine($"[DEBUG] DATABASE_URL = {connectionString}");
 
 // --- تهيئة EF Core ---
-// (نتأكد أن نص الاتصال ليس فارغاً قبل استخدامه)
-if (string.IsNullOrEmpty(connectionString))
-{
-	Console.WriteLine("[FATAL ERROR] Connection string is null. Cannot configure DbContext.");
-	// هذا سيمنع التطبيق من البدء إذا لم يجد المفتاح
-	throw new InvalidOperationException("Database connection string is missing.");
-}
 builder.Services.AddDbContext<DatabaseContext>(options =>
 	options.UseNpgsql(connectionString));
 
 // --- إعدادات JWT ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-
-// !!! --- هذا هو السطر الذي يقرأ المفتاح السري --- !!!
-var jwtKey = jwtSettings["Key"]
-	?? builder.Configuration["JWT_KEY"]; // <-- سنضيف هذا كاحتياط
-
-if (string.IsNullOrEmpty(jwtKey))
-{
-	Console.WriteLine("[FATAL ERROR] JWT Key is missing. Cannot configure authentication.");
-	throw new InvalidOperationException("JWT Key is missing in configuration (Jwt:Key or JWT_KEY).");
-}
-
-var key = Encoding.ASCII.GetBytes(jwtKey);
+var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]
+	?? throw new InvalidOperationException("JWT Key is missing in configuration."));
 
 builder.Services.AddAuthentication(options =>
 {
@@ -75,11 +58,11 @@ builder.Services.AddAuthentication(options =>
 	options.TokenValidationParameters = new TokenValidationParameters
 	{
 		ValidateIssuerSigningKey = true,
-		IssuerSigningKey = new SymmetricSecurityKey(key), // <-- هنا يتم استخدامه
+		IssuerSigningKey = new SymmetricSecurityKey(key),
 		ValidateIssuer = true,
-		ValidIssuer = jwtSettings["Issuer"] ?? builder.Configuration["JWT_ISSUER"], // <-- احتياط
+		ValidIssuer = jwtSettings["Issuer"],
 		ValidateAudience = true,
-		ValidAudience = jwtSettings["Audience"] ?? builder.Configuration["JWT_AUDIENCE"], // <-- احتياط
+		ValidAudience = jwtSettings["Audience"],
 		ValidateLifetime = true,
 		ClockSkew = TimeSpan.Zero
 	};
@@ -99,8 +82,6 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-	// !!! --- هذا هو السطر الذي تم إصلاحه --- !!!
-	// (كانت علامة = ناقصة قبل "v1")
 	c.SwaggerDoc("v1", new OpenApiInfo { Title = "DebtManagerApp.API", Version = "v1" });
 	c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 	{
@@ -147,7 +128,7 @@ using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
 	try
-	{ // !!! --- تم حذف كلمة 'De' الخاطئة من هنا --- !!!
+	{
 		var dbContext = services.GetRequiredService<DatabaseContext>();
 		dbContext.Database.EnsureCreated();
 	}
@@ -159,7 +140,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 // --- تفعيل الميدل وير ---
-app.UseCors("AllowAll"); // !!! --- تم إصلاح الخطأ الإملائي هنا --- !!!
+app.UseCors("AllowAll");
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseRouting();
@@ -190,4 +171,3 @@ static string ConvertSupabaseUrlToNpgsql(string databaseUrl)
 
 	return builder.ToString();
 }
-
