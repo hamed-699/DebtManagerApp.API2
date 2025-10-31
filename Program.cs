@@ -26,6 +26,7 @@ if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("post
 {
 	connectionString = ConvertSupabaseUrlToNpgsql(connectionString);
 }
+Console.WriteLine($"[DEBUG] DATABASE_URL = {connectionString}");
 
 // --- تهيئة EF Core ---
 builder.Services.AddDbContext<DatabaseContext>(options =>
