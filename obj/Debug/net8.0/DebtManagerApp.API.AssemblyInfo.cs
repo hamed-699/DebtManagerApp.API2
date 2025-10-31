@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DebtManagerApp.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+24ae60bce124a3541ad92e42c03c57046fc3fc58")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8315d44aebcf30d70ace9c05d9371a7a9b2a0f6d")]
 [assembly: System.Reflection.AssemblyProductAttribute("DebtManagerApp.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DebtManagerApp.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

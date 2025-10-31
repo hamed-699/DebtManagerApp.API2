@@ -17,11 +17,7 @@
 
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
 
-		<!-- 
-		  هذا هو التعديل الأهم 
-		  تم حذف السطر الخاطئ الخاص بـ SqlServer
-		  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.14" />
-		-->
+		
 
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>

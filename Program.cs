@@ -9,7 +9,7 @@ using DebtManagerApp.Data;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.Logging;
-using Npgsql; // 👈 مهم جداً
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,7 +29,6 @@ else
 // --- تهيئة EF Core (باستخدام "العامل الذكي") ---
 builder.Services.AddDbContext<DatabaseContext>(options =>
 	options.UseNpgsql(connectionString,
-		// --- (هذا هو السطر الجديد الذي يخبره أين يجد "تعليمات البناء") ---
 		npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName)
 	)
 );
@@ -125,27 +124,22 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // --- تطبيق "تعليمات البناء" (Migrations) ---
+// !!! --- هذا هو التعديل الأهم: قمنا بإزالة "الفخ" (try...catch) --- !!!
+// إذا فشل بناء الجداول، الخادم "سينهار" الآن، وسنرى الخطأ الحقيقي
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
-	try
-	{
-		var dbContext = services.GetRequiredService<DatabaseContext>();
+	var logger = services.GetRequiredService<ILogger<Program>>();
 
-		// ------------------ التغيير الوحيد هنا ------------------
-		// dbContext.Database.EnsureCreated(); // <-- حذف الأمر "الكسول"
-		dbContext.Database.Migrate(); // <-- استخدام الأمر "الذكي"
-									  // -----------------------------------------------------------
+	logger.LogInformation("Attempting to apply database migrations...");
 
-		Console.WriteLine("[SUCCESS] Database connection verified and tables migrated.");
-	}
-	catch (Exception ex)
-	{
-		var logger = services.GetRequiredService<ILogger<Program>>();
-		logger.LogError(ex, "An error occurred while migrating the database.");
-		// سنسمح للتطبيق بالاستمرار لكي نرى الأخطاء الأخرى إذا وجدت
-	}
+	var dbContext = services.GetRequiredService<DatabaseContext>();
+	dbContext.Database.Migrate(); // <-- إذا فشل هذا السطر، سينهار الخادم
+
+	logger.LogInformation("[SUCCESS] Database connection verified and tables migrated.");
 }
+// !!! --- نهاية التعديل --- !!!
+
 
 // --- تفعيل الميدل وير ---
 app.UseCors("AllowAll");
