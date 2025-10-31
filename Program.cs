@@ -18,10 +18,9 @@ using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
 
 // --- إعدادات Supabase (PostgreSQL) ---
-// !!! --- هذا هو السطر الذي تم إصلاحه نهائياً --- !!!
-// قمنا بتغيير "DefaultConnection" إلى "SupabaseConnection"
-// ليطابق الاسم الذي وضعناه في "متغيرات البيئة" في Render
-var connectionString = builder.Configuration.GetConnectionString("SupabaseConnection");
+// !!! --- هذا هو السطر الذي تم إصلاحه نهائياً (باستخدام مفتاح مباشر) --- !!!
+// قمنا بتغييره ليقرأ مفتاحاً واحداً ومسطحاً لضمان عدم حدوث خطأ
+var connectionString = builder.Configuration["SUPABASE_CONNECTION_STRING"];
 builder.Services.AddDbContext<DatabaseContext>(options =>
 	options.UseNpgsql(connectionString));
 
@@ -155,5 +154,4 @@ var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 
 // تشغيل الخادم على جميع العناوين (http://*) وعلى المنفذ المحدد
 app.Run($"http://*:{port}");
-
 
