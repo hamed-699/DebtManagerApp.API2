@@ -24,27 +24,47 @@ if (string.IsNullOrEmpty(connectionString))
 // ✅ هنا نتحقق إن كانت الصيغة تبدأ بـ postgres:// ثم نحولها
 if (!string.IsNullOrEmpty(connectionString))
 {
-	Console.WriteLine($"[DEBUG] Original connection string: {connectionString}");
+	Console.WriteLine($"[DEBUG] Original connection string found.");
 	if (connectionString.StartsWith("postgres://"))
 	{
-		connectionString = ConvertSupabaseUrlToNpgsql(connectionString);
-		Console.WriteLine($"[DEBUG] Converted connection string: {connectionString}");
+		try
+		{
+			connectionString = ConvertSupabaseUrlToNpgsql(connectionString);
+			Console.WriteLine($"[DEBUG] Connection string converted to Npgsql format.");
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine($"[ERROR] Failed to convert connection string: {ex.Message}");
+			throw; // إيقاف التطبيق إذا فشل التحويل
+		}
 	}
 }
 else
 {
-	Console.WriteLine("[ERROR] No connection string found!");
+	Console.WriteLine("[ERROR] No connection string found! (SUPABASE_CONNECTION_STRING or DATABASE_URL)");
 }
-Console.WriteLine($"[DEBUG] DATABASE_URL = {connectionString}");
 
 // --- تهيئة EF Core ---
+if (string.IsNullOrEmpty(connectionString))
+{
+	Console.WriteLine("[FATAL ERROR] Connection string is null. Cannot configure DbContext.");
+	throw new InvalidOperationException("Database connection string is missing.");
+}
 builder.Services.AddDbContext<DatabaseContext>(options =>
-	options.UseNpgsql(connectionString));
+	options.UseNpgsql(connectionString)); // <-- استخدام النص المحول
 
 // --- إعدادات JWT ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
-var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]
-	?? throw new InvalidOperationException("JWT Key is missing in configuration."));
+var jwtKey = jwtSettings["Key"]
+	?? builder.Configuration["JWT_KEY"];
+
+if (string.IsNullOrEmpty(jwtKey))
+{
+	Console.WriteLine("[FATAL ERROR] JWT Key is missing. Cannot configure authentication.");
+	throw new InvalidOperationException("JWT Key is missing in configuration (Jwt:Key or JWT_KEY).");
+}
+
+var key = Encoding.ASCII.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -60,9 +80,9 @@ builder.Services.AddAuthentication(options =>
 		ValidateIssuerSigningKey = true,
 		IssuerSigningKey = new SymmetricSecurityKey(key),
 		ValidateIssuer = true,
-		ValidIssuer = jwtSettings["Issuer"],
+		ValidIssuer = jwtSettings["Issuer"] ?? builder.Configuration["JWT_ISSUER"],
 		ValidateAudience = true,
-		ValidAudience = jwtSettings["Audience"],
+		ValidAudience = jwtSettings["Audience"] ?? builder.Configuration["JWT_AUDIENCE"],
 		ValidateLifetime = true,
 		ClockSkew = TimeSpan.Zero
 	};
@@ -131,6 +151,7 @@ using (var scope = app.Services.CreateScope())
 	{
 		var dbContext = services.GetRequiredService<DatabaseContext>();
 		dbContext.Database.EnsureCreated();
+		Console.WriteLine("[SUCCESS] Database connection verified and tables ensured.");
 	}
 	catch (Exception ex)
 	{
@@ -171,3 +192,4 @@ static string ConvertSupabaseUrlToNpgsql(string databaseUrl)
 
 	return builder.ToString();
 }
+
