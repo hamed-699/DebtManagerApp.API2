@@ -5,31 +5,22 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
-using DebtManagerApp.Data; // <-- (الإصلاح الأول) تم تصحيح المسار
-						   // using Microsoft.AspNetCore.Identity.EntityFrameworkCore; // (تمت الإزالة لأنها سببت أخطاء)
-using Microsoft.OpenApi.Models; // لـ OpenApiInfo
-								// using Google.Apis.Auth.OAuth2; // (تمت الإزالة)
-								// using Google.Cloud.Language.V1; // (تمت الإزالة)
-
-// !!! --- هذا هو السطر الجديد الذي أضفته --- !!!
+using DebtManagerApp.Data;
+using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
-// !!! --- نهاية السطر الجديد --- !!!
+
+// --- إضافة جديدة (مطلوبة للتعليمة الجديدة) ---
+using Microsoft.Extensions.Logging;
+// --- نهاية الإضافة ---
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- إعدادات Supabase (PostgreSQL) ---
-// !!! --- هذا هو السطر الذي تم إصلاحه نهائياً (باستخدام مفتاح مباشر) --- !!!
-// قمنا بتغييره ليقرأ مفتاحاً واحداً ومسطحاً لضمان عدم حدوث خطأ
 var connectionString = builder.Configuration["SUPABASE_CONNECTION_STRING"];
 builder.Services.AddDbContext<DatabaseContext>(options =>
 	options.UseNpgsql(connectionString));
 
-// --- (الإصلاح الثاني) ---
-// تم حذف إعدادات .AddIdentity() بالكامل لأنها كانت تسبب أخطاء
-// ويبدو أن المشروع يعتمد على JWT فقط للمصادقة
-
 // --- إعدادات JWT (JSON Web Token) ---
-// (هذا هو نظام المصادقة الذي كان موجوداً)
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]
 	?? throw new InvalidOperationException("JWT Key is missing in configuration."));
@@ -41,7 +32,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-	options.RequireHttpsMetadata = false; // في الوضع المجاني، قد لا نستخدم HTTPS دائماً
+	options.RequireHttpsMetadata = false;
 	options.SaveToken = true;
 	options.TokenValidationParameters = new TokenValidationParameters
 	{
@@ -52,28 +43,21 @@ builder.Services.AddAuthentication(options =>
 		ValidateAudience = true,
 		ValidAudience = jwtSettings["Audience"],
 		ValidateLifetime = true,
-		ClockSkew = TimeSpan.Zero // لا تسمح بفارق زمني
+		ClockSkew = TimeSpan.Zero
 	};
 });
 
 // --- إعدادات خدمة البريد الإلكتروني (SmtpSettings) ---
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
-builder.Services.AddTransient<EmailService>(); // (هذا صحيح)
-
-// --- (الإصلاح الثالث) ---
-// تم حذف إعدادات Google Cloud (Gemini) من هنا
-// لأن الـ Controller سيتعامل معها بنفسه، وهذا الإعداد كان يسبب أخطاء
-
+builder.Services.AddTransient<EmailService>();
 
 // إضافة الخدمات الأخرى
-// !!! --- هذا هو التعديل الثاني لحل خطأ 500 --- !!!
 builder.Services.AddControllers()
 	.AddJsonOptions(options =>
 	{
 		// هذا السطر يخبر الخادم بتجاهل الحلقات المفرغة
 		options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 	});
-// !!! --- نهاية التعديل --- !!!
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -119,12 +103,29 @@ builder.Services.AddCors(options =>
 	});
 });
 
-// --- (الإصلاح الرابع) ---
-// تم حذف إعدادات SecureDataHandler
-// يبدو أنه كلاس static ولا يجب حقنه (inject)
-
-
 var app = builder.Build();
+
+// --- !!! هذا هو التعديل الجديد لحل مشكلة خطأ 500 !!! ---
+// هذا الكود يخبر الخادم بأن يتأكد من إنشاء جداول قاعدة البيانات (مثل Users و Organizations)
+// في سوباس عند بدء التشغيل، إذا لم تكن موجودة.
+using (var scope = app.Services.CreateScope())
+{
+	var services = scope.ServiceProvider;
+	try
+	{
+		var dbContext = services.GetRequiredService<DatabaseContext>();
+		// هذا السطر هو الذي يقوم بإنشاء الجداول
+		dbContext.Database.EnsureCreated();
+	}
+	catch (Exception ex)
+	{
+		// في حال حدوث خطأ أثناء إنشاء الجداول، اطبعه في سجلات "رندر"
+		var logger = services.GetRequiredService<ILogger<Program>>();
+		logger.LogError(ex, "An error occurred while creating the database.");
+	}
+}
+// --- !!! نهاية التعديل الجديد !!! ---
+
 
 // تفعيل CORS
 app.UseCors("AllowAll");
@@ -154,4 +155,3 @@ var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 
 // تشغيل الخادم على جميع العناوين (http://*) وعلى المنفذ المحدد
 app.Run($"http://*:{port}");
-
