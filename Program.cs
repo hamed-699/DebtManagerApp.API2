@@ -14,44 +14,24 @@ using Npgsql; // 👈 مهم جداً
 var builder = WebApplication.CreateBuilder(args);
 
 // --- إعدادات Supabase (PostgreSQL) ---
+// --- أبسط طريقة: اقرأ المفتاح واستخدمه كما هو ---
 var connectionString = builder.Configuration["SUPABASE_CONNECTION_STRING"];
 
 if (string.IsNullOrEmpty(connectionString))
 {
-	connectionString = builder.Configuration["DATABASE_URL"];
-}
-
-// ✅ هنا نتحقق إن كانت الصيغة تبدأ بـ postgres:// ثم نحولها
-if (!string.IsNullOrEmpty(connectionString))
-{
-	Console.WriteLine($"[DEBUG] Original connection string found.");
-	if (connectionString.StartsWith("postgres://"))
-	{
-		try
-		{
-			connectionString = ConvertSupabaseUrlToNpgsql(connectionString);
-			Console.WriteLine($"[DEBUG] Connection string converted to Npgsql format.");
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($"[ERROR] Failed to convert connection string: {ex.Message}");
-			throw; // إيقاف التطبيق إذا فشل التحويل
-		}
-	}
+	Console.WriteLine("[FATAL ERROR] No connection string found! (SUPABASE_CONNECTION_STRING)");
+	throw new InvalidOperationException("Database connection string is missing.");
 }
 else
 {
-	Console.WriteLine("[ERROR] No connection string found! (SUPABASE_CONNECTION_STRING or DATABASE_URL)");
+	// نطبع أول 10 حروف للتأكد أننا نقرأه (بدون طباعة كلمة السر)
+	Console.WriteLine($"[DEBUG] Connection string found, starting with: {connectionString.Substring(0, Math.Min(connectionString.Length, 10))}...");
 }
 
 // --- تهيئة EF Core ---
-if (string.IsNullOrEmpty(connectionString))
-{
-	Console.WriteLine("[FATAL ERROR] Connection string is null. Cannot configure DbContext.");
-	throw new InvalidOperationException("Database connection string is missing.");
-}
+// (سيتم استخدام النص "كما هو" مباشرة)
 builder.Services.AddDbContext<DatabaseContext>(options =>
-	options.UseNpgsql(connectionString)); // <-- استخدام النص المحول
+	options.UseNpgsql(connectionString));
 
 // --- إعدادات JWT ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -172,24 +152,5 @@ app.MapControllers();
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://*:{port}");
 
-// 🔄 دالة التحويل
-static string ConvertSupabaseUrlToNpgsql(string databaseUrl)
-{
-	// شكل الرابط: postgres://user:password@host:5432/dbname
-	var uri = new Uri(databaseUrl);
-	var userInfo = uri.UserInfo.Split(':');
-
-	var builder = new NpgsqlConnectionStringBuilder
-	{
-		Host = uri.Host,
-		Port = uri.Port,
-		Username = userInfo[0],
-		Password = userInfo.Length > 1 ? userInfo[1] : "",
-		Database = uri.AbsolutePath.Trim('/'),
-		SslMode = SslMode.Require,
-		TrustServerCertificate = true
-	};
-
-	return builder.ToString();
-}
+// 🔄 دالة التحويل (تم حذفها لأننا سنستخدم النص البسيط)
 
