@@ -8,10 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using DebtManagerApp.Data;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
-
-// --- إضافة جديدة (مطلوبة للتعليمة الجديدة) ---
-using Microsoft.Extensions.Logging;
-// --- نهاية الإضافة ---
+using Microsoft.Extensions.Logging; // <-- تأكد من وجود هذا
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,7 +52,6 @@ builder.Services.AddTransient<EmailService>();
 builder.Services.AddControllers()
 	.AddJsonOptions(options =>
 	{
-		// هذا السطر يخبر الخادم بتجاهل الحلقات المفرغة
 		options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 	});
 
@@ -63,7 +59,6 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
 	c.SwaggerDoc("v1", new OpenApiInfo { Title = "DebtManagerApp.API", Version = "v1" });
-	// إضافة إعدادات JWT لـ Swagger UI
 	c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 	{
 		Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -105,7 +100,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// --- !!! هذا هو التعديل الجديد لحل مشكلة خطأ 500 !!! ---
+// --- !!! هذا هو الكود الهام الذي أعدناه !!! ---
 // هذا الكود يخبر الخادم بأن يتأكد من إنشاء جداول قاعدة البيانات (مثل Users و Organizations)
 // في سوباس عند بدء التشغيل، إذا لم تكن موجودة.
 using (var scope = app.Services.CreateScope())
@@ -124,18 +119,14 @@ using (var scope = app.Services.CreateScope())
 		logger.LogError(ex, "An error occurred while creating the database.");
 	}
 }
-// --- !!! نهاية التعديل الجديد !!! ---
+// --- !!! نهاية الكود المُعاد !!! ---
 
 
 // تفعيل CORS
 app.UseCors("AllowAll");
 
-// Configure the HTTP request pipeline.
-// if (app.Environment.IsDevelopment())
-// {
 app.UseSwagger();
 app.UseSwaggerUI();
-// }
 
 // تطبيق التوجيه (Routing)
 app.UseRouting();
@@ -149,9 +140,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // --- تعديل هام جداً للنشر على Render ---
-// قراءة المنفذ (PORT) من متغيرات البيئة التي تضبطها Render
-// إذا لم يتم العثور عليه، استخدم منفذ افتراضي مثل 8080
+// !!! --- هذا هو السطر الذي تم تصحيحه --- !!!
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-
-// تشغيل الخادم على جميع العناوين (http://*) وعلى المنفذ المحدد
 app.Run($"http://*:{port}");
+
