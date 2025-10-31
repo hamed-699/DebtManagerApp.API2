@@ -31,7 +31,8 @@ else
 // --- تهيئة EF Core ---
 // (سيتم استخدام النص "كما هو" مباشرة)
 builder.Services.AddDbContext<DatabaseContext>(options =>
-	options.UseNpgsql(connectionString));
+	options.UseNpgsql(connectionString, o => o.MigrationsAssembly("DebtManagerApp.API"))
+); // <-- أضفنا هذا السطر ليعرف مكان مجلد Migrations
 
 // --- إعدادات JWT ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -123,20 +124,26 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// --- إنشاء الجداول ---
+// --- إنشاء الجداول (باستخدام الطريقة الذكية) ---
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
 	try
 	{
 		var dbContext = services.GetRequiredService<DatabaseContext>();
-		dbContext.Database.EnsureCreated();
-		Console.WriteLine("[SUCCESS] Database connection verified and tables ensured.");
+
+		// ------------------ التغيير الوحيد هنا ------------------
+		// dbContext.Database.EnsureCreated(); // <-- هذا هو الأمر "الكسول" القديم
+		dbContext.Database.Migrate(); // <-- هذا هو الأمر "الذكي" الجديد
+									  // -----------------------------------------------------------
+
+		Console.WriteLine("[SUCCESS] Database connection verified and tables migrated.");
 	}
 	catch (Exception ex)
 	{
 		var logger = services.GetRequiredService<ILogger<Program>>();
-		logger.LogError(ex, "An error occurred while creating the database.");
+		logger.LogError(ex, "An error occurred while migrating the database.");
+		// سنسمح للتطبيق بالاستمرار لكي نرى الأخطاء الأخرى إذا وجدت
 	}
 }
 
@@ -153,4 +160,3 @@ var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://*:{port}");
 
 // 🔄 دالة التحويل (تم حذفها لأننا سنستخدم النص البسيط)
-
