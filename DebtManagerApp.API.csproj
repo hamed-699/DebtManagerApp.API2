@@ -10,24 +10,21 @@
 	<ItemGroup>
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
 		<PackageReference Include="Google.Apis.Auth" Version="1.72.0" />
-
-		<!-- تم الإبقاء على الحزمة القديمة (V1) لأنها مُثبتة لديك بالفعل -->
 		<PackageReference Include="Google.Cloud.AIPlatform.V1" Version="3.53.0" />
-		<!-- تم حذف أي إشارة للحزمة الجديدة (GenAI.V1Beta) -->
-
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
 
-		
+		<!-- تأكيد: تم حذف حزمة SqlServer الخاطئة -->
 
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
-		<!-- هذه هي الحزمة الصحيحة التي نستخدمها (Supabase) -->
+		<!-- الحزمة الصحيحة (Supabase) -->
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 	</ItemGroup>
+
 	<ItemGroup>
 		<Folder Include="Data\" />
 	</ItemGroup>
@@ -35,8 +32,15 @@
 	<ItemGroup>
 		<Content Update="mythical-way-467121-j6-2db788d15bc9.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-
 		</Content>
 	</ItemGroup>
 
+	<ItemGroup>
+		<Content Include="Migrations\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+
 </Project>
+

@@ -438,3 +438,5 @@ C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.Extension
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Npgsql.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\DebtManagerApp.API.sourcelink.json
+C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Migrations\20251101000000_InitialCreate.cs
+C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Migrations\DatabaseContextModelSnapshot.cs
