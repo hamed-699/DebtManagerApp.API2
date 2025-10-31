@@ -22,7 +22,19 @@ if (string.IsNullOrEmpty(connectionString))
 }
 
 // ✅ هنا نتحقق إن كانت الصيغة تبدأ بـ postgres:// ثم نحولها
-if (!string.IsNullOrEmpty(connectionString) && connectionString.StartsWith("postgres://"))
+if (!string.IsNullOrEmpty(connectionString))
+{
+	Console.WriteLine($"[DEBUG] Original connection string: {connectionString}");
+	if (connectionString.StartsWith("postgres://"))
+	{
+		connectionString = ConvertSupabaseUrlToNpgsql(connectionString);
+		Console.WriteLine($"[DEBUG] Converted connection string: {connectionString}");
+	}
+}
+else
+{
+	Console.WriteLine("[ERROR] No connection string found!");
+}
 {
 	connectionString = ConvertSupabaseUrlToNpgsql(connectionString);
 }
