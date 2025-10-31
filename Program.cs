@@ -8,12 +8,22 @@ using Microsoft.AspNetCore.Identity;
 using DebtManagerApp.Data;
 using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
-using Microsoft.Extensions.Logging; // <-- تأكد من وجود هذا
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // --- إعدادات Supabase (PostgreSQL) ---
+// !!! --- هذا هو الإصلاح النهائي بناءً على اكتشافك --- !!!
+// 1. الخادم سيبحث عن المفتاح الذي استخدمناه يدوياً
 var connectionString = builder.Configuration["SUPABASE_CONNECTION_STRING"];
+
+// 2. إذا لم يجده (كان فارغاً)، سيبحث عن المفتاح الافتراضي الذي تستخدمه "رندر"
+if (string.IsNullOrEmpty(connectionString))
+{
+	connectionString = builder.Configuration["DATABASE_URL"];
+}
+// !!! --- نهاية الإصلاح --- !!!
+
 builder.Services.AddDbContext<DatabaseContext>(options =>
 	options.UseNpgsql(connectionString));
 
@@ -100,26 +110,22 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// --- !!! هذا هو الكود الهام الذي أعدناه !!! ---
-// هذا الكود يخبر الخادم بأن يتأكد من إنشاء جداول قاعدة البيانات (مثل Users و Organizations)
-// في سوباس عند بدء التشغيل، إذا لم تكن موجودة.
+// --- الكود الخاص بإنشاء الجداول (سليم ومطلوب) ---
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
 	try
 	{
 		var dbContext = services.GetRequiredService<DatabaseContext>();
-		// هذا السطر هو الذي يقوم بإنشاء الجداول
 		dbContext.Database.EnsureCreated();
 	}
 	catch (Exception ex)
 	{
-		// في حال حدوث خطأ أثناء إنشاء الجداول، اطبعه في سجلات "رندر"
 		var logger = services.GetRequiredService<ILogger<Program>>();
 		logger.LogError(ex, "An error occurred while creating the database.");
 	}
 }
-// --- !!! نهاية الكود المُعاد !!! ---
+// --- نهاية كود إنشاء الجداول ---
 
 
 // تفعيل CORS
@@ -139,8 +145,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-// --- تعديل هام جداً للنشر على Render ---
-// !!! --- هذا هو السطر الذي تم تصحيحه --- !!!
+// --- الكود المصحح لتشغيل المنفذ (PORT) ---
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://*:{port}");
 
