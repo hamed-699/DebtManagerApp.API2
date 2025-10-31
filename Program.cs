@@ -30,9 +30,10 @@ else
 
 // --- تهيئة EF Core ---
 // (سيتم استخدام النص "كما هو" مباشرة)
+// --- (الرجوع إلى الطريقة البسيطة) ---
 builder.Services.AddDbContext<DatabaseContext>(options =>
-	options.UseNpgsql(connectionString, o => o.MigrationsAssembly("DebtManagerApp.API"))
-); // <-- أضفنا هذا السطر ليعرف مكان مجلد Migrations
+	options.UseNpgsql(connectionString)
+); // <-- قمنا بإزالة السطر الخاص بـ Migrations
 
 // --- إعدادات JWT ---
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -54,7 +55,8 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-	options.RequireHttpsMetadata = false;
+	// --- (تم تصحيح الخطأ المطبعي هنا) ---
+	options.RequireHttpsMetadata = false; // <-- كانت HttspMetadata
 	options.SaveToken = true;
 	options.TokenValidationParameters = new TokenValidationParameters
 	{
@@ -124,7 +126,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// --- إنشاء الجداول (باستخدام الطريقة الذكية) ---
+// --- إنشاء الجداول (باستخدام الطريقة "الكسولة" الأصلية) ---
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
@@ -133,16 +135,16 @@ using (var scope = app.Services.CreateScope())
 		var dbContext = services.GetRequiredService<DatabaseContext>();
 
 		// ------------------ التغيير الوحيد هنا ------------------
-		// dbContext.Database.EnsureCreated(); // <-- هذا هو الأمر "الكسول" القديم
-		dbContext.Database.Migrate(); // <-- هذا هو الأمر "الذكي" الجديد
-									  // -----------------------------------------------------------
+		dbContext.Database.EnsureCreated(); // <-- إرجاع الأمر "الكسول"
+											// dbContext.Database.Migrate(); // <-- حذف الأمر "الذكي" الخاطئ
+											// -----------------------------------------------------------
 
-		Console.WriteLine("[SUCCESS] Database connection verified and tables migrated.");
+		Console.WriteLine("[SUCCESS] Database connection verified and tables ensured.");
 	}
 	catch (Exception ex)
 	{
 		var logger = services.GetRequiredService<ILogger<Program>>();
-		logger.LogError(ex, "An error occurred while migrating the database.");
+		logger.LogError(ex, "An error occurred while ensuring the database was created.");
 		// سنسمح للتطبيق بالاستمرار لكي نرى الأخطاء الأخرى إذا وجدت
 	}
 }
@@ -160,3 +162,4 @@ var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://*:{port}");
 
 // 🔄 دالة التحويل (تم حذفها لأننا سنستخدم النص البسيط)
+

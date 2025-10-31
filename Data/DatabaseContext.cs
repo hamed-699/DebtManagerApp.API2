@@ -4,6 +4,7 @@ namespace DebtManagerApp.Data
 {
 	public class DatabaseContext : DbContext
 	{
+		// --- هذه هي "المخططات الهندسية" التي يحتاجها الخادم ---
 		public DbSet<OrganizationSettings> OrganizationSettings { get; set; } = null!;
 		public DbSet<User> Users { get; set; } = null!;
 		public DbSet<Customer> Customers { get; set; } = null!;
@@ -14,6 +15,7 @@ namespace DebtManagerApp.Data
 		public DbSet<SaleItem> SaleItems { get; set; } = null!;
 		public DbSet<Category> Categories { get; set; } = null!;
 		public DbSet<Organization> Organizations { get; set; } = null!;
+		// --------------------------------------------------------
 
 
 		public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
@@ -176,4 +178,3 @@ namespace DebtManagerApp.Data
 		}
 	}
 }
-
