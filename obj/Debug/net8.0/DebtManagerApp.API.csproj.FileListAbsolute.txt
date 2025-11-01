@@ -295,6 +295,8 @@ C:\Users\HP\Desktop\جديد طك\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\appsettings.Development.json
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\appsettings.json
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\mythical-way-467121-j6-2db788d15bc9.json
+C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Migrations\20251101000000_InitialCreate.cs
+C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Migrations\DatabaseContextModelSnapshot.cs
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\DebtManagerApp.API.staticwebassets.endpoints.json
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\DebtManagerApp.API.exe
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\DebtManagerApp.API.deps.json
@@ -328,6 +330,7 @@ C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.EntityFra
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Abstractions.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Design.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
+C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.Extensions.Caching.Memory.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
@@ -346,6 +349,8 @@ C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.IdentityM
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.OpenApi.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Mono.TextTemplating.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Npgsql.dll
+C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.Swagger.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Swashbuckle.AspNetCore.SwaggerUI.dll
@@ -418,6 +423,7 @@ C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\DebtManagerApp.API.
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\DebtManagerApp.API.csproj.CoreCompileInputs.cache
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\DebtManagerApp.API.MvcApplicationPartsAssemblyInfo.cs
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\DebtManagerApp.API.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\DebtManagerApp.API.sourcelink.json
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\rjimswa.dswa.cache.json
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
@@ -434,9 +440,3 @@ C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\refint\DebtManagerA
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\DebtManagerApp.API.pdb
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\DebtManagerApp.API.genruntimeconfig.cache
 C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\ref\DebtManagerApp.API.dll
-C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Microsoft.Extensions.Caching.Memory.dll
-C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Npgsql.dll
-C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
-C:\Users\HP\Desktop\debt\DebtManagerApp.API\obj\Debug\net8.0\DebtManagerApp.API.sourcelink.json
-C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Migrations\20251101000000_InitialCreate.cs
-C:\Users\HP\Desktop\debt\DebtManagerApp.API\bin\Debug\net8.0\Migrations\DatabaseContextModelSnapshot.cs
