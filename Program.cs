@@ -94,7 +94,9 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-	c.SwaggerDoc("v1", new OpenApiInfo { Title = "DebtManagerApp.API", Version = "v1" });
+	// !!! --- هذا هو التعديل الوحيد للاختبار --- !!!
+	c.SwaggerDoc("v1", new OpenApiInfo { Title = "DebtManagerApp.API - TEST V9", Version = "v1" });
+	// !!! --- نهاية التعديل --- !!!
 	c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 	{
 		Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
