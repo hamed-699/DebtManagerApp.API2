@@ -1,21 +1,15 @@
-﻿using DebtManagerApp.API.Models;
-using DebtManagerApp.API.Services;
-// !!! --- هذا هو الإصلاح الصحيح --- !!!
-// "using DebtManagerApp.Data;"
-// هذا هو العنوان الصحيح لـ "خريطة البناء"
-// (DatabaseContext.cs) الذي أرسلته أنت
-using DebtManagerApp.Data;
-using Microsoft;//www.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
+﻿using DebtManagerApp.API.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+using DebtManagerApp.API.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-// !!! --- نهاية الإصلاح --- !!!
-using Microsoft.OpenApi.Models;
-using Npgsql;
 using System.Text;
+using Microsoft.AspNetCore.Identity;
+using DebtManagerApp.Data;
+using Microsoft.OpenApi.Models;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,13 +29,7 @@ else
 // --- تهيئة EF Core (باستخدام "العامل الذكي") ---
 builder.Services.AddDbContext<DatabaseContext>(options =>
 	options.UseNpgsql(connectionString,
-		npgsqlOptions =>
-		{
-			npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName);
-			// زيادة "الصبر" (Timeout) إلى 90 ثانية لإعطاء
-			// قاعدة البيانات المجانية وقتاً "للاستيقاظ"
-			npgsqlOptions.CommandTimeout(90);
-		}
+		npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName)
 	)
 );
 
@@ -94,9 +82,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-	// !!! --- هذا هو التعديل الوحيد للاختبار --- !!!
-	c.SwaggerDoc("v1", new OpenApiInfo { Title = "DebtManagerApp.API - TEST V9", Version = "v1" });
-	// !!! --- نهاية التعديل --- !!!
+	c.SwaggerDoc("v1", new OpenApiInfo { Title = "DebtManagerApp.API", Version = "v1" });
 	c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 	{
 		Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
@@ -130,31 +116,29 @@ builder.Services.AddCors(options =>
 	options.AddPolicy("AllowAll", policy =>
 	{
 		policy.AllowAnyOrigin()
-			 .AllowAnyMethod()
-			 .AllowAnyHeader();
+			  .AllowAnyMethod()
+			  .AllowAnyHeader();
 	});
 });
 
 var app = builder.Build();
 
 // --- تطبيق "تعليمات البناء" (Migrations) ---
-// "EnsureCreated" سيتأكد من بناء جميع الجداول من الصفر
+// !!! --- هذا هو التعديل الأهم: قمنا بإزالة "الفخ" (try...catch) --- !!!
+// إذا فشل بناء الجداول، الخادم "سينهار" الآن، وسنرى الخطأ الحقيقي
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
 	var logger = services.GetRequiredService<ILogger<Program>>();
 
-	logger.LogInformation("Attempting to ensure database schema is created...");
+	logger.LogInformation("Attempting to apply database migrations...");
 
-	// الآن هذا المتغير "dbContext" سيشير إلى قاعدة البيانات الصحيحة
-	// التي تحتوي على "خرائط" المستخدمين والعملاء
 	var dbContext = services.GetRequiredService<DatabaseContext>();
+	dbContext.Database.Migrate(); // <-- إذا فشل هذا السطر، سينهار الخادم
 
-	// سيقوم هذا الأمر بإنشاء الجداول مباشرة إذا لم تكن موجودة
-	dbContext.Database.EnsureCreated();
-
-	logger.LogInformation("[SUCCESS] Database schema created/verified.");
+	logger.LogInformation("[SUCCESS] Database connection verified and tables migrated.");
 }
+// !!! --- نهاية التعديل --- !!!
 
 
 // --- تفعيل الميدل وير ---
