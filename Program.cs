@@ -1,15 +1,21 @@
-﻿using DebtManagerApp.API.Services;
-using Microsoft.EntityFrameworkCore;
-using DebtManagerApp.API.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using Microsoft.AspNetCore.Identity;
+﻿using DebtManagerApp.API.Models;
+using DebtManagerApp.API.Services;
+// !!! --- هذا هو الإصلاح الصحيح --- !!!
+// "using DebtManagerApp.Data;"
+// هذا هو العنوان الصحيح لـ "خريطة البناء"
+// (DatabaseContext.cs) الذي أرسلته أنت
 using DebtManagerApp.Data;
-using Microsoft.OpenApi.Models;
-using System.Text.Json.Serialization;
+using Microsoft;//www.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+// !!! --- نهاية الإصلاح --- !!!
+using Microsoft.OpenApi.Models;
 using Npgsql;
+using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,11 +38,9 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 		npgsqlOptions =>
 		{
 			npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName);
-			// !!! --- هذا هو التعديل الجديد --- !!!
 			// زيادة "الصبر" (Timeout) إلى 90 ثانية لإعطاء
 			// قاعدة البيانات المجانية وقتاً "للاستيقاظ"
 			npgsqlOptions.CommandTimeout(90);
-			// !!! --- نهاية التعديل --- !!!
 		}
 	)
 );
@@ -140,6 +144,8 @@ using (var scope = app.Services.CreateScope())
 
 	logger.LogInformation("Attempting to ensure database schema is created...");
 
+	// الآن هذا المتغير "dbContext" سيشير إلى قاعدة البيانات الصحيحة
+	// التي تحتوي على "خرائط" المستخدمين والعملاء
 	var dbContext = services.GetRequiredService<DatabaseContext>();
 
 	// سيقوم هذا الأمر بإنشاء الجداول مباشرة إذا لم تكن موجودة
