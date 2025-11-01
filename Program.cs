@@ -29,7 +29,15 @@ else
 // --- تهيئة EF Core (باستخدام "العامل الذكي") ---
 builder.Services.AddDbContext<DatabaseContext>(options =>
 	options.UseNpgsql(connectionString,
-		npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName)
+		npgsqlOptions =>
+		{
+			npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName);
+			// !!! --- هذا هو التعديل الجديد --- !!!
+			// زيادة "الصبر" (Timeout) إلى 90 ثانية لإعطاء
+			// قاعدة البيانات المجانية وقتاً "للاستيقاظ"
+			npgsqlOptions.CommandTimeout(90);
+			// !!! --- نهاية التعديل --- !!!
+		}
 	)
 );
 
@@ -124,9 +132,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // --- تطبيق "تعليمات البناء" (Migrations) ---
-// !!! --- هذا هو التعديل الأهم: --- !!!
 // "EnsureCreated" سيتأكد من بناء جميع الجداول من الصفر
-// هذا أفضل للنشر لأول مرة
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
@@ -136,13 +142,11 @@ using (var scope = app.Services.CreateScope())
 
 	var dbContext = services.GetRequiredService<DatabaseContext>();
 
-	// --- هذا هو السطر الذي قمنا بتغييره ---
 	// سيقوم هذا الأمر بإنشاء الجداول مباشرة إذا لم تكن موجودة
 	dbContext.Database.EnsureCreated();
 
 	logger.LogInformation("[SUCCESS] Database schema created/verified.");
 }
-// !!! --- نهاية التعديل --- !!!
 
 
 // --- تفعيل الميدل وير ---
@@ -156,3 +160,4 @@ app.MapControllers();
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://*:{port}");
+
