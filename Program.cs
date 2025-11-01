@@ -116,27 +116,31 @@ builder.Services.AddCors(options =>
 	options.AddPolicy("AllowAll", policy =>
 	{
 		policy.AllowAnyOrigin()
-			  .AllowAnyMethod()
-			  .AllowAnyHeader();
+			 .AllowAnyMethod()
+			 .AllowAnyHeader();
 	});
 });
 
 var app = builder.Build();
 
 // --- تطبيق "تعليمات البناء" (Migrations) ---
-// !!! --- هذا هو التعديل الأهم: قمنا بإزالة "الفخ" (try...catch) --- !!!
-// إذا فشل بناء الجداول، الخادم "سينهار" الآن، وسنرى الخطأ الحقيقي
+// !!! --- هذا هو التعديل الأهم: --- !!!
+// "EnsureCreated" سيتأكد من بناء جميع الجداول من الصفر
+// هذا أفضل للنشر لأول مرة
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
 	var logger = services.GetRequiredService<ILogger<Program>>();
 
-	logger.LogInformation("Attempting to apply database migrations...");
+	logger.LogInformation("Attempting to ensure database schema is created...");
 
 	var dbContext = services.GetRequiredService<DatabaseContext>();
-	dbContext.Database.Migrate(); // <-- إذا فشل هذا السطر، سينهار الخادم
 
-	logger.LogInformation("[SUCCESS] Database connection verified and tables migrated.");
+	// --- هذا هو السطر الذي قمنا بتغييره ---
+	// سيقوم هذا الأمر بإنشاء الجداول مباشرة إذا لم تكن موجودة
+	dbContext.Database.EnsureCreated();
+
+	logger.LogInformation("[SUCCESS] Database schema created/verified.");
 }
 // !!! --- نهاية التعديل --- !!!
 
@@ -152,4 +156,3 @@ app.MapControllers();
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://*:{port}");
-
