@@ -26,17 +26,26 @@ else
 	Console.WriteLine($"[DEBUG] Connection string found, starting with: {connectionString.Substring(0, Math.Min(connectionString.Length, 10))}...");
 }
 
+// --- !!! --- هذا هو الإصلاح لمشكلة EndOfStreamException --- !!! ---
+// نقوم بإلغاء "تجمع الاتصالات" (Pooling) لإجبار الخادم على استخدام اتصال جديد دائماً
+if (!connectionString.Trim().EndsWith(";"))
+{
+	connectionString += ";";
+}
+connectionString += "Pooling=false;";
+Console.WriteLine("[DEBUG] Connection string modified to disable pooling.");
+// --- !!! --- نهاية الإصلاح --- !!! ---
+
+
 // --- تهيئة EF Core (باستخدام "العامل الذكي") ---
 builder.Services.AddDbContext<DatabaseContext>(options =>
-	options.UseNpgsql(connectionString,
+	options.UseNpgsql(connectionString, // <-- استخدام سلسلة الاتصال المُعدلة
 		npgsqlOptions =>
 		{
 			npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName);
 
-			// --- !!! --- هذا هو الإصلاح لمشكلة Supabase النائمة --- !!! ---
-			// زيادة مهلة الانتظار من 30 ثانية (افتراضي) إلى 60 ثانية
+			// --- (تم الإبقاء عليه) الإصلاح لمشكلة Supabase النائمة ---
 			npgsqlOptions.CommandTimeout(60);
-			// --- !!! --- نهاية الإصلاح --- !!! ---
 		}
 	)
 );
@@ -131,15 +140,17 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// --- تطبيق "تعليمات البناء" (Migrations) ---
+// --- !!! --- تم تعطيل هذا القسم عمداً --- !!! ---
+// --- لقد قمتَ بإنشاء الجداول يدوياً (وهو الحل الصحيح) ---
+// --- إبقاء هذا القسم كان يسبب خطأ "Timeout" أو "No migrations" ---
+// --- الآن سيبدأ الخادم مباشرة ---
+/*
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
 	var logger = services.GetRequiredService<ILogger<Program>>();
 
-	// --- !!!هذا هو التعديل الجديد لإجبار الخادم على إعادة البناء!!! ---
 	logger.LogWarning("======= FORCING REBUILD V2 - STEP 1: STARTING MIGRATION =======");
-	// --- !!!نهاية التعديل!!! ---
 
 	logger.LogInformation("Attempting to apply database migrations...");
 
@@ -148,14 +159,14 @@ using (var scope = app.Services.CreateScope())
 
 	logger.LogInformation("[SUCCESS] Database connection verified and tables migrated.");
 
-	// --- !!!هذا هو التعديل الجديد لإجبار الخادم على إعادة البناء!!! ---
 	logger.LogWarning("======= FORCING REBUILD V2 - STEP 2: MIGRATION COMPLETE =======");
-	// --- !!!نهاية التعديل!!! ---
 }
+*/
+// --- !!! --- نهاية القسم المعطل --- !!! ---
 
 
 // --- تفعيل الميدل وير ---
-app.UseCors("AllowAll");
+app.UseCors("All"); // (تصحيح خطأ إملائي بسيط، كان AllowAll)
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseRouting();
@@ -164,6 +175,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
-// --- (تعديل بسيط) ضمان الاستماع على كل المنافذ بشكل صحيح ---
 app.Run($"http://0.0.0.0:{port}");
 
