@@ -21,15 +21,11 @@
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 
+		<!-- (الجزء 1) "كسر الذاكرة المؤقتة" - سنبقي على هذا -->
 		<PackageReference Include="Humanizer.Core" Version="2.14.1" />
-		<!-- (هذه حزمة آمنة وصغيرة لإجبار الخادم على إعادة البناء بالكامل) -->
 
 	</ItemGroup>
 
-	<ItemGroup>
-		<Compile Include="Migrations\**" />
-	</ItemGroup>
-	<!-- (هذا الأمر يخبر الخادم "يجب عليك ترجمة هذه الملفات" بشكل صريح) -->
 
 	<ItemGroup>
 		<Folder Include="Data\" />
@@ -37,13 +33,9 @@
 
 	<ItemGroup>
 		<Content Update="mythical-way-467121-j6-2db788d15bc9.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNew_est</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
-
-	<!-- 
-		تم حذف الجزء الخاطئ الذي كان يمنع ترجمة مجلد Migrations في المرة السابقة
-	-->
 
 </Project>
 
