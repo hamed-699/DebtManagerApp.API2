@@ -139,41 +139,41 @@ namespace DebtManagerApp.Data
 				.OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<Product>()
-			   .HasOne(p => p.Organization)
-			   .WithMany(o => o.Products)
-			   .HasForeignKey(p => p.OrganizationId)
-			   .OnDelete(DeleteBehavior.Cascade);
+			 .HasOne(p => p.Organization)
+			 .WithMany(o => o.Products)
+			 .HasForeignKey(p => p.OrganizationId)
+			 .OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<Category>()
-			   .HasOne(cat => cat.Organization)
-			   .WithMany(o => o.Categories)
-			   .HasForeignKey(cat => cat.OrganizationId)
-			   .OnDelete(DeleteBehavior.Cascade);
+			 .HasOne(cat => cat.Organization)
+			 .WithMany(o => o.Categories)
+			 .HasForeignKey(cat => cat.OrganizationId)
+			 .OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<Sale>()
-			   .HasOne(s => s.Organization)
-			   .WithMany(o => o.Sales)
-			   .HasForeignKey(s => s.OrganizationId)
-			   .OnDelete(DeleteBehavior.Cascade);
+			 .HasOne(s => s.Organization)
+			 .WithMany(o => o.Sales)
+			 .HasForeignKey(s => s.OrganizationId)
+			 .OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<Transaction>()
-			   .HasOne(t => t.Organization)
-			   .WithMany(o => o.Transactions)
-			   .HasForeignKey(t => t.OrganizationId)
-			   .OnDelete(DeleteBehavior.Cascade);
+			 .HasOne(t => t.Organization)
+			 .WithMany(o => o.Transactions)
+			 .HasForeignKey(t => t.OrganizationId)
+			 .OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<Transaction>()
-			   .HasOne(t => t.Customer)
-			   .WithMany(c => c.Transactions)
-			   .HasForeignKey(t => t.CustomerId)
-			   .OnDelete(DeleteBehavior.Cascade);
+			 .HasOne(t => t.Customer)
+			 .WithMany(c => c.Transactions)
+			 .HasForeignKey(t => t.CustomerId)
+			 .OnDelete(DeleteBehavior.Cascade);
 
 			modelBuilder.Entity<Transaction>()
-			   .HasOne(t => t.Product)
-			   .WithMany()
-			   .HasForeignKey(t => t.ProductId)
-			   .IsRequired(false)
-			   .OnDelete(DeleteBehavior.SetNull);
+			 .HasOne(t => t.Product)
+			 .WithMany()
+			 .HasForeignKey(t => t.ProductId)
+			 .IsRequired(false)
+			 .OnDelete(DeleteBehavior.SetNull);
 
 		}
 	}
