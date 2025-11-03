@@ -13,17 +13,23 @@
 		<PackageReference Include="Google.Cloud.AIPlatform.V1" Version="3.53.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
 
-		<!-- تأكيد: تم حذف حزمة SqlServer الخاطئة -->
-
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
-		<!-- الحزمة الصحيحة (Supabase) -->
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+
+		<PackageReference Include="Humanizer.Core" Version="2.14.1" />
+		<!-- (هذه حزمة آمنة وصغيرة لإجبار الخادم على إعادة البناء بالكامل) -->
+
 	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Include="Migrations\**" />
+	</ItemGroup>
+	<!-- (هذا الأمر يخبر الخادم "يجب عليك ترجمة هذه الملفات" بشكل صريح) -->
 
 	<ItemGroup>
 		<Folder Include="Data\" />
@@ -35,5 +41,9 @@
 		</Content>
 	</ItemGroup>
 
-	
+	<!-- 
+		تم حذف الجزء الخاطئ الذي كان يمنع ترجمة مجلد Migrations في المرة السابقة
+	-->
+
 </Project>
+

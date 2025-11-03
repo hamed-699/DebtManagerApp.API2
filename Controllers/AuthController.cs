@@ -10,7 +10,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations; // --- إضافة جديدة ---
+using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore.Storage; // --- إضافة جديدة للأمان الذري ---
 
 namespace DebtManagerApp.API.Controllers
 {
@@ -27,86 +28,112 @@ namespace DebtManagerApp.API.Controllers
 			_config = config;
 		}
 
-		// !!! --- تم تعديل دالة التسجيل بالكامل --- !!!
 		[HttpPost("register")]
 		public async Task<IActionResult> Register(UserRegisterDto userRegisterDto)
 		{
-			// التحقق مما إذا كان اسم المستخدم موجوداً بالفعل
-			if (await _context.Users.AnyAsync(u => u.Username.ToLower() == userRegisterDto.Username.ToLower()))
+			// --- (تعديل 1) إضافة "الأمان الذري" (Transaction) ---
+			// هذا يضمن أن جميع العمليات تنجح معاً أو تفشل معاً
+			await using var transaction = await _context.Database.BeginTransactionAsync();
+
+			// --- (تعديل 2) إضافة "كاشف الأخطاء" ---
+			try
 			{
-				// --- (تعديل 1) إرجاع رسالة خطأ واضحة ---
-				return BadRequest(new { message = "اسم المستخدم هذا موجود مسبقاً." });
+				// التحقق مما إذا كان اسم المستخدم موجوداً بالفعل
+				if (await _context.Users.AnyAsync(u => u.Username.ToLower() == userRegisterDto.Username.ToLower()))
+				{
+					return BadRequest(new { message = "اسم المستخدم هذا موجود مسبقاً." });
+				}
+
+				// التحقق من البريد الإلكتروني (اختياري لكن موصى به)
+				if (await _context.Users.AnyAsync(u => u.Email.ToLower() == userRegisterDto.Email.ToLower()))
+				{
+					return BadRequest(new { message = "هذا البريد الإلكتروني مسجل مسبقاً." });
+				}
+
+				// تشفير كلمة المرور باستخدام BCrypt
+				var passwordHash = BCrypt.Net.BCrypt.HashPassword(userRegisterDto.Password);
+
+				// 1. إنشاء المؤسسة الجديدة أولاً
+				var newOrganization = new Organization
+				{
+					Name = userRegisterDto.OrganizationName,
+					Settings = new OrganizationSettings { ShopName = userRegisterDto.OrganizationName }
+				};
+
+				// 2. إنشاء المستخدم الجديد وربطه بالمؤسسة
+				var newUser = new User
+				{
+					Username = userRegisterDto.Username,
+					Email = userRegisterDto.Email,
+					PasswordHash = passwordHash,
+					Role = UserRole.Admin,
+					Organization = newOrganization
+				};
+
+				_context.Users.Add(newUser);
+				await _context.SaveChangesAsync();
+
+				// --- تأكيد نجاح العملية ---
+				await transaction.CommitAsync();
+
+				// جلب المستخدم مع المؤسسة (التي نحتاجها في العميل)
+				var userForReturn = await _context.Users
+					.Include(u => u.Organization)
+					.FirstOrDefaultAsync(u => u.Id == newUser.Id);
+
+				// إنشاء "بطاقة الهوية الرقمية" (JWT Token)
+				var token = GenerateJwtToken(newUser);
+
+				// إرجاع الكائن الذي يتوقعه العميل
+				return Ok(new { token, user = userForReturn });
 			}
-
-			// التحقق من البريد الإلكتروني (اختياري لكن موصى به)
-			if (await _context.Users.AnyAsync(u => u.Email.ToLower() == userRegisterDto.Email.ToLower()))
+			catch (Exception ex)
 			{
-				return BadRequest(new { message = "هذا البريد الإلكتروني مسجل مسبقاً." });
+				// --- إذا حدث خطأ، قم بإلغاء كل شيء ---
+				await transaction.RollbackAsync();
+
+				// طباعة الخطأ في سجلات الخادم (Logs)
+				Console.WriteLine($"[AUTH-REGISTER-ERROR] {ex.ToString()}");
+
+				// --- إرجاع رسالة الخطأ الحقيقية إلى التطبيق ---
+				// هذا سيوقف التخمين ويظهر الخطأ "relation Users does not exist"
+				return StatusCode(500, new { message = $"فشل تسجيل الحساب: {ex.Message}" });
 			}
-
-			// تشفير كلمة المرور باستخدام BCrypt
-			var passwordHash = BCrypt.Net.BCrypt.HashPassword(userRegisterDto.Password);
-
-			// 1. إنشاء المؤسسة الجديدة أولاً
-			var newOrganization = new Organization
-			{
-				Name = userRegisterDto.OrganizationName,
-				// إنشاء الإعدادات الافتراضية للمؤسسة
-				Settings = new OrganizationSettings { ShopName = userRegisterDto.OrganizationName }
-			};
-
-			// 2. إنشاء المستخدم الجديد وربطه بالمؤسسة
-			var newUser = new User
-			{
-				Username = userRegisterDto.Username,
-				Email = userRegisterDto.Email,
-				PasswordHash = passwordHash,
-				Role = UserRole.Admin, // أول مستخدم في المؤسسة هو المشرف دائماً
-				Organization = newOrganization
-			};
-
-			_context.Users.Add(newUser);
-			await _context.SaveChangesAsync();
-
-			// --- (تعديل 2) إرجاع الكائن الصحيح (Token + User) ---
-			// جلب المستخدم مع المؤسسة (التي نحتاجها في العميل)
-			var userForReturn = await _context.Users
-				.Include(u => u.Organization) // <-- تحميل المؤسسة
-				.FirstOrDefaultAsync(u => u.Id == newUser.Id);
-
-			// إنشاء "بطاقة الهوية الرقمية" (JWT Token)
-			var token = GenerateJwtToken(newUser);
-
-			// إرجاع الكائن الذي يتوقعه العميل
-			return Ok(new { token, user = userForReturn });
 		}
-		// !!! --- نهاية تعديل دالة التسجيل --- !!!
 
 
-		// !!! --- تم تعديل دالة تسجيل الدخول --- !!!
 		[HttpPost("login")]
 		public async Task<IActionResult> Login(UserLoginDto userLoginDto)
 		{
-			// جلب المستخدم مع المؤسسة
-			var user = await _context.Users
-				.Include(u => u.Organization) // <-- تحميل المؤسسة
-				.FirstOrDefaultAsync(u => u.Username.ToLower() == userLoginDto.Username.ToLower());
-
-			// التحقق من وجود المستخدم وصحة كلمة المرور
-			if (user == null || !BCrypt.Net.BCrypt.Verify(userLoginDto.Password, user.PasswordHash))
+			// --- (تعديل) إضافة "كاشف الأخطاء" ---
+			try
 			{
-				return Unauthorized("Invalid username or password.");
+				// جلب المستخدم مع المؤسسة
+				var user = await _context.Users
+					.Include(u => u.Organization)
+					.FirstOrDefaultAsync(u => u.Username.ToLower() == userLoginDto.Username.ToLower());
+
+				// التحقق من وجود المستخدم وصحة كلمة المرور
+				if (user == null || !BCrypt.Net.BCrypt.Verify(userLoginDto.Password, user.PasswordHash))
+				{
+					return Unauthorized(new { message = "اسم المستخدم أو كلمة المرور غير صحيحة." });
+				}
+
+				// إنشاء "بطاقة الهوية الرقمية" (JWT Token)
+				var token = GenerateJwtToken(user);
+
+				return Ok(new { token, user });
 			}
+			catch (Exception ex)
+			{
+				// طباعة الخطأ في سجلات الخادم (Logs)
+				Console.WriteLine($"[AUTH-LOGIN-ERROR] {ex.ToString()}");
 
-			// إنشاء "بطاقة الهوية الرقمية" (JWT Token)
-			var token = GenerateJwtToken(user);
-
-			// --- (تعديل) إرجاع الكائن الكامل (Token + User) ---
-			return Ok(new { token, user });
+				// --- إرجاع رسالة الخطأ الحقيقية إلى التطبيق ---
+				return StatusCode(500, new { message = $"فشل تسجيل الدخول: {ex.Message}" });
+			}
 		}
-		// !!! --- نهاية تعديل دالة تسجيل الدخول --- !!!
 
-		// --- بداية الإضافة: "صندوق" بيانات لنقطة النهاية الجديدة ---
 		public class CloudPasswordResetDto
 		{
 			[Required]
@@ -117,33 +144,40 @@ namespace DebtManagerApp.API.Controllers
 			[EmailAddress]
 			public string Email { get; set; } = string.Empty;
 		}
-		// --- نهاية الإضافة ---
 
-		// --- بداية الإضافة: نقطة نهاية جديدة لتحديث كلمة السر في السحابة ---
 		[HttpPost("update-cloud-password")]
 		public async Task<IActionResult> UpdateCloudPassword(CloudPasswordResetDto resetDto)
 		{
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == resetDto.Username.ToLower());
-
-			if (user == null)
+			// --- (تعديل) إضافة "كاشف الأخطاء" ---
+			try
 			{
-				return NotFound("User not found.");
-			}
+				var user = await _context.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == resetDto.Username.ToLower());
 
-			// خطوة تحقق أمنية: نتأكد أن البريد الإلكتروني المرسل مطابق للبريد المسجل
-			if (user.Email == null || user.Email.ToLower() != resetDto.Email.ToLower())
+				if (user == null)
+				{
+					return NotFound(new { message = "المستخدم غير موجود." });
+				}
+
+				if (user.Email == null || user.Email.ToLower() != resetDto.Email.ToLower())
+				{
+					return Unauthorized(new { message = "البريد الإلكتروني غير مطابق." });
+				}
+
+				var newPasswordHash = BCrypt.Net.BCrypt.HashPassword(resetDto.NewPassword);
+				user.PasswordHash = newPasswordHash;
+
+				await _context.SaveChangesAsync();
+				return Ok(new { message = "تم تحديث كلمة المرور سحابياً بنجاح." });
+			}
+			catch (Exception ex)
 			{
-				return Unauthorized("Invalid email verification.");
+				// طباعة الخطأ في سجلات الخادم (Logs)
+				Console.WriteLine($"[AUTH-UPDATEPW-ERROR] {ex.ToString()}");
+
+				// --- إرجاع رسالة الخطأ الحقيقية إلى التطبيق ---
+				return StatusCode(500, new { message = $"فشل تحديث كلمة المرور: {ex.Message}" });
 			}
-
-			// تشفير كلمة السر الجديدة باستخدام BCrypt (نفس طريقة الخادم)
-			var newPasswordHash = BCrypt.Net.BCrypt.HashPassword(resetDto.NewPassword);
-			user.PasswordHash = newPasswordHash;
-
-			await _context.SaveChangesAsync();
-			return Ok("Cloud password updated successfully.");
 		}
-		// --- نهاية الإضافة ---
 
 
 		private string GenerateJwtToken(User user)
@@ -151,7 +185,6 @@ namespace DebtManagerApp.API.Controllers
 			var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
 			var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-			// المعلومات التي سيتم تخزينها في البطاقة
 			var claims = new[]
 			{
 				new Claim(JwtRegisteredClaimNames.Sub, user.Username),
@@ -165,7 +198,7 @@ namespace DebtManagerApp.API.Controllers
 				issuer: _config["Jwt:Issuer"],
 				audience: _config["Jwt:Audience"],
 				claims: claims,
-				expires: DateTime.Now.AddHours(24), // صلاحية البطاقة: 24 ساعة
+				expires: DateTime.Now.AddHours(24),
 				signingCredentials: credentials);
 
 			return new JwtSecurityTokenHandler().WriteToken(token);
