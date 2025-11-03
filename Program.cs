@@ -116,29 +116,34 @@ builder.Services.AddCors(options =>
 	options.AddPolicy("AllowAll", policy =>
 	{
 		policy.AllowAnyOrigin()
-			  .AllowAnyMethod()
-			  .AllowAnyHeader();
+			 .AllowAnyMethod()
+			 .AllowAnyHeader();
 	});
 });
 
 var app = builder.Build();
 
 // --- تطبيق "تعليمات البناء" (Migrations) ---
-// !!! --- هذا هو التعديل الأهم: قمنا بإزالة "الفخ" (try...catch) --- !!!
-// إذا فشل بناء الجداول، الخادم "سينهار" الآن، وسنرى الخطأ الحقيقي
 using (var scope = app.Services.CreateScope())
 {
 	var services = scope.ServiceProvider;
 	var logger = services.GetRequiredService<ILogger<Program>>();
 
+	// --- !!!هذا هو التعديل الجديد لإجبار الخادم على إعادة البناء!!! ---
+	logger.LogWarning("======= FORCING REBUILD V2 - STEP 1: STARTING MIGRATION =======");
+	// --- !!!نهاية التعديل!!! ---
+
 	logger.LogInformation("Attempting to apply database migrations...");
 
 	var dbContext = services.GetRequiredService<DatabaseContext>();
-	dbContext.Database.Migrate(); // <-- إذا فشل هذا السطر، سينهار الخادم
+	dbContext.Database.Migrate();
 
 	logger.LogInformation("[SUCCESS] Database connection verified and tables migrated.");
+
+	// --- !!!هذا هو التعديل الجديد لإجبار الخادم على إعادة البناء!!! ---
+	logger.LogWarning("======= FORCING REBUILD V2 - STEP 2: MIGRATION COMPLETE =======");
+	// --- !!!نهاية التعديل!!! ---
 }
-// !!! --- نهاية التعديل --- !!!
 
 
 // --- تفعيل الميدل وير ---
@@ -152,4 +157,3 @@ app.MapControllers();
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Run($"http://*:{port}");
-

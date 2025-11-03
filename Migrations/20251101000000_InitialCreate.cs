@@ -382,8 +382,10 @@ namespace DebtManagerApp.API.Migrations
 			migrationBuilder.DropTable(
 				name: "Products");
 
+			// --- !!! بداية التصحيح: إزالة الخطأ الإملائي !!! ---
 			migrationBuilder.DropTable(
 				name: "Customers");
+			// --- !!! نهاية التصحيح !!! ---
 
 			migrationBuilder.DropTable(
 				name: "Categories");
@@ -393,3 +395,4 @@ namespace DebtManagerApp.API.Migrations
 		}
 	}
 }
+
