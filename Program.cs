@@ -29,7 +29,15 @@ else
 // --- تهيئة EF Core (باستخدام "العامل الذكي") ---
 builder.Services.AddDbContext<DatabaseContext>(options =>
 	options.UseNpgsql(connectionString,
-		npgsqlOptions => npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName)
+		npgsqlOptions =>
+		{
+			npgsqlOptions.MigrationsAssembly(typeof(Program).Assembly.FullName);
+
+			// --- !!! --- هذا هو الإصلاح لمشكلة Supabase النائمة --- !!! ---
+			// زيادة مهلة الانتظار من 30 ثانية (افتراضي) إلى 60 ثانية
+			npgsqlOptions.CommandTimeout(60);
+			// --- !!! --- نهاية الإصلاح --- !!! ---
+		}
 	)
 );
 
@@ -156,4 +164,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 var port = Environment.GetEnvironmentVariable("PORT") ?? "10000";
+// --- (تعديل بسيط) ضمان الاستماع على كل المنافذ بشكل صحيح ---
 app.Run($"http://0.0.0.0:{port}");
+
