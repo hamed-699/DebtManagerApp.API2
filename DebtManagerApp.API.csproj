@@ -4,38 +4,43 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<UserSecretsId>dotnet-DebtManagerApp.API-639556A3-31A9-4C0B-97F7-1C34B80313E8</UserSecretsId>
+		<InvariantGlobalization>false</InvariantGlobalization>
+		<UserSecretsId>d8a2d3e8-7e1d-4f6b-8c5a-3d2f9a1b4c7f</UserSecretsId>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-		<PackageReference Include="Google.Apis.Auth" Version="1.72.0" />
-		<PackageReference Include="Google.Cloud.AIPlatform.V1" Version="3.53.0" />
+
+		<!-- <PackageReference Include="Google.Cloud.VertexAI" Version="1.0.0" /> -->
+
+		<PackageReference Include="MailKit" Version="4.3.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
+
+		<!-- (تم الإبقاء عليه) تم تحديث الإصدار ليتوافق (من 8.0.0 إلى 8.0.11) -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+
+		<!-- (تم الإبقاء على الحذف) تم حذف السطر المكرر (الإصدار 8.0.0) من هنا -->
+		<!-- <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0" /> -->
 
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+
+		<!-- (تم الإبقاء عليه) تم الإبقاء على الإصدار الأحدث 8.0.11 (وهو صحيح لديك) -->
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
+
+		<!-- (تم الإبقاء على الحذف) تم حذف الحزمة الناقصة لـ UseSnakeCaseNamingConvention -->
+		<!-- <PackageReference Include="EFCore.NamingConventions" Version="8.0.3" /> -->
+
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
-
-		<!-- (الجزء 1) "كسر الذاكرة المؤقتة" - سنبقي على هذا -->
-		<PackageReference Include="Humanizer.Core" Version="2.14.1" />
-
-	</ItemGroup>
-
-
-	<ItemGroup>
-		<Folder Include="Data\" />
+		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Update="mythical-way-467121-j6-2db788d15bc9.json">
-			<CopyToOutputDirectory>PreserveNew_est</CopyToOutputDirectory>
-		</Content>
+		<Compile Remove="Controllers\GeminiController.cs" />
 	</ItemGroup>
 
 </Project>
-
